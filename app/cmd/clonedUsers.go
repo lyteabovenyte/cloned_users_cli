@@ -27,18 +27,14 @@ import (
 	// #include <utmpx.h>
 	// #include <string.h>
 	"C"
-	"log"
-	"strconv"
-	"time"
-	"unsafe"
-
-	"github.com/stephane-martin/skewer/sys/utmpx"
 
 	"github.com/spf13/cobra"
 )
 import (
 	"fmt"
-	"os"
+
+	"github.com/spf13/pflag"
+	"github.com/stephane-martin/skewer/sys/utmpx"
 )
 
 // clonedUsersCmd represents the clonedUsers command
@@ -48,49 +44,50 @@ var clonedUsersCmd = &cobra.Command{
 	Long: `clonedUsers is just a simple command line prompt that reads /var/run/utmpx file
 	which determines the name of the users and host from where they are connected to the system`,
 	Run: func(cmd *cobra.Command, args []string) {
-		f, err := os.ReadFile("/var/run/utmpx")
-		if err != nil {
-			log.Fatal(err)
-		}
-		var entry utmpx.Entry
-		for i := 0; i < len(f); i += unsafe.Sizeof(entry) {
-			var copyEntry []utmpx.Entry
-			copy(copyEntry, entry)
-			copy(&copyEntry, f[i:i+unsafe.Sizeof(copyEntry)])
-			fmt.Printf("User: %s, Host: %s, PID: %d, Line: %s, ID: %s, Time: %v\n",
-				C.GoString(&copyEntry.UtUser[0]),
-				C.GoString(&copyEntry.UtHost[0]),
-				copyEntry.Pid,
-				C.GoString(&copyEntry.UtLine[0]),
-				C.GoString(&copyEntry.UtId[0]),
-				time.Unix(int64(copyEntry.Tv.TvSec), 0))
-		}
+		fs := cmd.Flags()
 
-		// ent := utmpx.Entry{}
+		for _, ent := range utmpx.All() {
+			switch {
+			case mustBool(fs, "user") && mustBool(fs, "timestamp"):
+				fmt.Printf("User: %v, Timestamp: %v\n", ent.User, ent.Timestamp)
+			case mustBool(fs, "user") && !mustBool(fs, "timestamp"):
+				fmt.Printf("User: %v\n", ent.User)
+			case !mustBool(fs, "user") && mustBool(fs, "timestamp"):
+				fmt.Printf("Timestamp: %v\n", ent.Timestamp)
+			default:
+				fmt.Printf("User: %v, Timestamp: %v, ID: %v\n", ent.User, ent.Timestamp, ent.ID)
+			}
+		}
 	},
 }
 
-// spliting a byte to specified chunks of byte for each block of user.
-func split(buf []byte, lim int) [][]byte {
-	var chunk []byte
-	chunks := make([][]byte, 0, len(buf)/lim+1)
-	for len(buf) >= lim {
-		chunk, buf = buf[:lim], buf[lim:]
-		chunks = append(chunks, chunk)
+func mustString(fs *pflag.FlagSet, name string) string {
+	v, err := fs.GetString(name)
+	if err != nil {
+		panic(err)
 	}
-	if len(buf) > 0 {
-		chunks = append(chunks, buf[:len(buf)])
-	}
-	return chunks
+	return v
 }
 
-func ByteToInt(in []byte) int32 {
-	x, _ := strconv.Atoi(string(in))
-	return int32(x)
+func mustBool(fs *pflag.FlagSet, name string) bool {
+	v, err := fs.GetBool(name)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
 
 func init() {
 	rootCmd.AddCommand(clonedUsersCmd)
+
+	clonedUsersCmd.Flags().BoolP("user", "u", true,
+		"get the logged in users")
+
+	clonedUsersCmd.Flags().Bool("timestamp", false,
+		"get the user's timestamp")
+
+	clonedUsersCmd.Flags().BoolP("help", "h", false,
+		"display help text")
 
 	// Here you will define your flags and configuration settings.
 
