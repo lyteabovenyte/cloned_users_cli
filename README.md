@@ -19,13 +19,16 @@ type Entry struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 ```
+as well there is a utmpx package in Go. that if you are interested in the interface and types
+represented by the package you can visit [utmpx package repo](https://github.com/stephane-martin/skewer/tree/2081a449f6b4/sys/utmpx).  
+trust me it worth it to have a look 🤝
 
-so I tried to implement a binary file with `go` that you can execute in you shell to use it, just for fun. ( thanks jadi :) )
+so I tried to implement a binary file with `go` that you can execute and use it, just for fun.
 
 #### usage:
 - first clone the repo
 - change the mode of the repo so it can be executed  
-`chmod +x /your/dir/than/contains/the/app/repo`
+`chmod +x /your/dir/that/contains/the/app/repo`
 - cd to the app dir  
 `cd /cloned_users_cli/app`
 - build the binary of the app  
@@ -33,16 +36,23 @@ so I tried to implement a binary file with `go` that you can execute in you shel
 - now you have the executable file in your dir
 - you can use it like this:  
 `./main clonedUsers`
+- or with the flags like so  
+`./main clonedUsers --users --timestamp`
 
 #### flags:
 I wanted it to be a little bit fun. so I made two flags for you that you can use  
 - first one is `--user` that you can specify that you want the logged in users to print in stdout
-- second one is `--timestamp` that you can specify for your users timestamps
-- third is the help text with `--help` that shows the what this command do and what is it for 🤠
-- i can make it more fun with a lot of flags and os signals if you liked it 🤠
+- second one is `--timestamp` that you can specify for your user's timestamps
+- third is the help text with `--help` or the abbreviated version one, `-h` that shows what this command do and what is it for 🤠
+
+#### usage of the flags:
+- `./main clonedUsers --users --timestamp` will show you the users and also the timestamp of each.
 
 
-#### cobra-cli
-- i've user cobra-cli to make this command line interface and the license. so a big thank to spf13
-- and more important, big thanks to jadi to make such a ADINE for me  
-  #### love you jadi❤️
+#### Notes:
+- i've used cobra-cli to make this command line interface and the license. so a big thank to spf13, and as always it worth it to take a look at [cobra package](https://github.com/spf13/cobra-cli).
+- and more important, big thanks to jadi to make such a ADINE for me. [jadi's youtube](https://www.youtube.com/@JadiMirmirani) is the best OpenSource project(!!) that i've encounter 🤝
+
+### it could get more fun and i try to make it better in my weekends. so let me know if it was fun for you too 🤝
+
+#### again, thanks & love you jadi❤️
